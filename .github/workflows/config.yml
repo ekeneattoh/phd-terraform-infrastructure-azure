@@ -47,4 +47,4 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
       run: |
         ls
-        ./deploy.sh
+        ./deploy-dev-test.sh
