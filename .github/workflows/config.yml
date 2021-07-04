@@ -3,11 +3,7 @@ name: "Deploy Solution"
 on:
   push:
     branches:
-      - main
-  pull_request:
-    branches:
-      - main
-
+      - prod #fake branch to ensure no deployment happens; will do this at the end to avoid storage account costs for tf state
 jobs:
   sophia_terraform_infrastructure:
     name: "Terraform Infrastructure"
