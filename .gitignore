@@ -27,3 +27,7 @@ override.tf.json
 
 # Include tfplan files to ignore the plan output of command: terraform plan -out=tfplan
 # example: *tfplan*
+
+# ignore credentials and config file file
+terraform_spn_creds.json
+configure_azure_env_variables.sh
