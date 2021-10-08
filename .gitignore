@@ -31,3 +31,6 @@ override.tf.json
 # ignore credentials and config file file
 terraform_spn_creds.json
 configure_azure_env_variables.sh
+
+# don't track setup file
+setup.sh
