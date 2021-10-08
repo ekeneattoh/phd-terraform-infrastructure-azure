@@ -6,5 +6,6 @@ resource "azurerm_resource_group" "resource_group" {
   location = "West Europe"
   tags = {
     project = "ea_phd"
+    env = var.env_name
   }
 }
