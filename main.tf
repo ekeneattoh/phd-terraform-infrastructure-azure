@@ -66,7 +66,12 @@ POLICY_RULE
             "description": "The list of resource types that can be deployed.",
             "displayName": "Allowed resource types",
             "strongType": "resourceTypes"
-        }
+        },
+        "defaultValue": ["Microsoft.Web/sites",
+        "Microsoft.Web/serverfarms",
+        "Microsoft.Web/sites/functions",
+        "Microsoft.Web/sites/functions/keys",
+        "Microsoft.Web/sites/config"]
     }
   }
 PARAMETERS
@@ -80,13 +85,11 @@ resource "azurerm_subscription_policy_assignment" "assignment_1" {
   parameters           = <<PARAMETERS
 {
   "listOfResourceTypesAllowed": {
-    "value": [
-        "Microsoft.Web/sites",
+    "value": [ "Microsoft.Web/sites",
         "Microsoft.Web/serverfarms",
         "Microsoft.Web/sites/functions",
         "Microsoft.Web/sites/functions/keys",
-        "Microsoft.Web/sites/config"
-        ]
+        "Microsoft.Web/sites/config"]
   }
 }
 PARAMETERS
