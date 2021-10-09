@@ -81,7 +81,7 @@ resource "azurerm_subscription_policy_assignment" "assignment_1" {
   parameters           = <<PARAMETERS
 {
   "listOfResourceTypesAllowed": {
-    "value": ["Microsoft.Web/sites/functions/*"]
+    "value": ["Microsoft.Web/*"]
   }
 }
 PARAMETERS
