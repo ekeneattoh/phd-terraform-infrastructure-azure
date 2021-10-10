@@ -94,3 +94,66 @@ resource "azurerm_subscription_policy_assignment" "assignment_1" {
 }
 PARAMETERS
 }
+
+resource "azurerm_policy_definition" "allowed_asp" {
+  name         = "allowed-asp-policy"
+  policy_type  = "Custom"
+  mode         = "Indexed"
+  display_name = "allowed app service plans"
+
+  metadata = <<METADATA
+    {
+    "category": "App Service"
+    }
+
+METADATA
+
+
+  policy_rule = <<POLICY_RULE
+    {
+    "if": {
+            "allOf": [
+                {
+                    "field": "type",
+                    "equals": "Microsoft.Web/serverFarms"
+                },
+                {
+                    "field": "Microsoft.Web/serverFarms/sku.family",
+                    "notIn": [
+                        "F1",
+                        "D1",
+                        "B1"
+                    ]
+                }
+            ]
+        },
+        "then": {
+            "effect": "[parameters('effect')]"
+        }
+  }
+POLICY_RULE
+
+
+  parameters = <<PARAMETERS
+    {
+    "effect": {
+            "type": "String",
+            "metadata": {
+                "displayName": "Effect",
+                "description": "Enable or disable the execution of the policy"
+            },
+            "allowedValues": [
+                "Deny"
+            ],
+            "defaultValue": "Deny"
+    }
+  }
+PARAMETERS
+
+}
+
+resource "azurerm_subscription_policy_assignment" "assignment_2" {
+  name                 = "allowed-asp"
+  policy_definition_id = azurerm_policy_definition.allowed_asp.id
+  subscription_id      = "/subscriptions/201e612c-a95e-4c2e-aefe-5aef9c0cafb3"
+}
