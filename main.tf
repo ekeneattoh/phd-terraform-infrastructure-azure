@@ -118,7 +118,7 @@ METADATA
                     "equals": "Microsoft.Web/serverFarms"
                 },
                 {
-                    "field": "Microsoft.Web/serverFarms/sku.family",
+                    "field": "Microsoft.Web/serverFarms/sku.Name",
                     "notIn": [
                         "F1",
                         "D1",
