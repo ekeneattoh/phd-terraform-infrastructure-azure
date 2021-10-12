@@ -35,6 +35,7 @@ resource "azurerm_app_service" "solid_server" {
   site_config {
     linux_fx_version                     = "DOCKER|eaphd.azurecr.io/solid-ea-phd:latest"
     acr_use_managed_identity_credentials = true
+    app_command_line = "-b https://ea-solid-server.azurewebsites.net/"
   }
 
   app_settings = {
