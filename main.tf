@@ -90,7 +90,8 @@ resource "azurerm_subscription_policy_assignment" "assignment_1" {
         "Microsoft.Web/sites/functions",
         "Microsoft.Web/sites/functions/keys",
         "Microsoft.Web/sites/config",
-        "Microsoft.ContainerRegistry/registries"]
+        "Microsoft.ContainerRegistry/registries",
+        "Microsoft.Storage/storageAccounts"]
   }
 }
 PARAMETERS
@@ -123,7 +124,8 @@ METADATA
                     "notIn": [
                         "F1",
                         "D1",
-                        "B1"
+                        "B1",
+                        "Y1"
                     ]
                 }
             ]

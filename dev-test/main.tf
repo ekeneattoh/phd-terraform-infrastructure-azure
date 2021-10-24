@@ -16,8 +16,15 @@ module "landing-zone" {
   env_name = "dev-test"
 }
 
+
 module "solid" {
   source = "../modules/solid"
+
+  env_name = "dev-test"
+}
+
+module "iot-led-simulator" {
+  source = "../modules/iot-led-simulator"
 
   env_name = "dev-test"
 }
