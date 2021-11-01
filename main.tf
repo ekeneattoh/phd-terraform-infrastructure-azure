@@ -91,7 +91,8 @@ resource "azurerm_subscription_policy_assignment" "assignment_1" {
         "Microsoft.Web/sites/functions/keys",
         "Microsoft.Web/sites/config",
         "Microsoft.ContainerRegistry/registries",
-        "Microsoft.Storage/storageAccounts"]
+        "Microsoft.Storage/storageAccounts",
+        "Microsoft.Insights/components"]
   }
 }
 PARAMETERS

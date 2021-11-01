@@ -13,7 +13,8 @@ provider "azurerm" {
 module "landing-zone" {
   source = "../modules/landing-zone"
 
-  env_name = "dev-test"
+  env_name     = "dev-test"
+  project_name = "ea_phd"
 }
 
 

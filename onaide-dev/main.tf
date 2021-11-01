@@ -13,6 +13,6 @@ provider "azurerm" {
 module "landing-zone" {
   source = "../modules/landing-zone"
 
-  env_name = "prod"
-  project_name = "ea_phd"
+  env_name     = "onaide-dev"
+  project_name = "onaide"
 }

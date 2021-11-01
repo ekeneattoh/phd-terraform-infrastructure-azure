@@ -19,6 +19,13 @@ resource "azurerm_storage_account" "function_app_sa" {
   account_replication_type = "LRS"
 }
 
+resource "azurerm_application_insights" "app_insights" {
+  name                = "ea-phd-insights"
+  location            = "West Europe"
+  resource_group_name = "${var.env_name}-rg"
+  application_type    = "other"
+}
+
 
 resource "azurerm_function_app" "iot_led_simulator" {
   name = "iot-led-simulator"
@@ -39,7 +46,8 @@ resource "azurerm_function_app" "iot_led_simulator" {
   }
 
   app_settings = {
-    "FUNCTIONS_WORKER_RUNTIME" = "python"
+    "FUNCTIONS_WORKER_RUNTIME"       = "python"
+    "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.app_insights.instrumentation_key
   }
 
   site_config {
