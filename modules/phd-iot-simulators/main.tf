@@ -27,8 +27,8 @@ resource "azurerm_application_insights" "app_insights" {
 }
 
 
-resource "azurerm_function_app" "iot_led_simulator" {
-  name = "iot-led-simulator"
+resource "azurerm_function_app" "phd_iot_simulator" {
+  name = "phd-iot-simulator"
   depends_on = [
     azurerm_storage_account.function_app_sa
   ]

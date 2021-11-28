@@ -24,8 +24,8 @@ module "solid" {
   env_name = "dev-test"
 }
 
-module "iot-led-simulator" {
-  source = "../modules/iot-led-simulator"
+module "phd-iot-simulators" {
+  source = "../modules/phd-iot-simulators"
 
   env_name = "dev-test"
 }
