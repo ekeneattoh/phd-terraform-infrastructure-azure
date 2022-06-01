@@ -71,8 +71,8 @@ resource "azurerm_app_service_plan" "api_asp" {
   reserved            = true
 
   sku {
-    tier = "Basic"
-    size = "B1"
+    tier = "PremiumV2"
+    size = "P1v2"
   }
 
   tags = {
