@@ -34,3 +34,9 @@ configure_azure_env_variables.sh
 
 # don't track setup file
 setup.sh
+
+
+# don't track cocuission files
+modules/cocuission
+
+onaide-dev/

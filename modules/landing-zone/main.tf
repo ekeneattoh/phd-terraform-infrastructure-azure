@@ -5,7 +5,7 @@ resource "azurerm_resource_group" "resource_group" {
   name     = "${var.env_name}-rg"
   location = "West Europe"
   tags = {
-    project = "ea_phd"
+    project = var.project_name
     env = var.env_name
   }
 }

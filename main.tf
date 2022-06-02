@@ -2,7 +2,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.0"
+      version = "~>2.80.0"
     }
   }
 }
@@ -89,7 +89,18 @@ resource "azurerm_subscription_policy_assignment" "assignment_1" {
         "Microsoft.Web/serverfarms",
         "Microsoft.Web/sites/functions",
         "Microsoft.Web/sites/functions/keys",
-        "Microsoft.Web/sites/config"]
+        "Microsoft.Web/sites/config",
+        "Microsoft.ContainerRegistry/registries",
+        "Microsoft.Storage/storageAccounts",
+        "Microsoft.Insights/components",
+        "Microsoft.Network/privateDnsZones",
+        "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+        "Microsoft.Network/virtualNetworks",
+        "Microsoft.Network/virtualNetworks/subnets",
+        "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+        "Microsoft.Network/privateEndpoints",
+        "Microsoft.Network/networkInterfaces",
+        "Microsoft.Network/privateEndpoints/privateDnsZoneGroups"]
   }
 }
 PARAMETERS
@@ -122,7 +133,9 @@ METADATA
                     "notIn": [
                         "F1",
                         "D1",
-                        "B1"
+                        "B1",
+                        "Y1",
+                        "P1v2"
                     ]
                 }
             ]

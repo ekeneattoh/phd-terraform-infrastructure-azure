@@ -2,7 +2,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.0"
+      version = "~>2.80.0"
     }
   }
 }
@@ -12,6 +12,20 @@ provider "azurerm" {
 
 module "landing-zone" {
   source = "../modules/landing-zone"
+
+  env_name     = "dev-test"
+  project_name = "ea_phd"
+}
+
+
+module "solid" {
+  source = "../modules/solid"
+
+  env_name = "dev-test"
+}
+
+module "phd-iot-simulators" {
+  source = "../modules/phd-iot-simulators"
 
   env_name = "dev-test"
 }
