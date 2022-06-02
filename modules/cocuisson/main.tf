@@ -63,8 +63,8 @@ resource "azurerm_private_dns_zone_virtual_network_link" "shared_services_link" 
   }
 }
 
-resource "azurerm_app_service_plan" "api_asp" {
-  name                = "api-asp"
+resource "azurerm_app_service_plan" "shared_services_asp" {
+  name                = "${var.project_name}-asp"
   location            = var.location
   resource_group_name = var.resourcegroup_name
   kind                = "FunctionApp"
@@ -82,7 +82,7 @@ resource "azurerm_app_service_plan" "api_asp" {
 }
 
 resource "azurerm_storage_account" "api_sa" {
-  name                     = "apisa"
+  name                     = "${var.project_name}sa"
   resource_group_name      = var.resourcegroup_name
   location                 = var.location
   account_tier             = "Standard"
@@ -114,7 +114,7 @@ resource "azurerm_function_app" "shared_private_services" {
   ]
   location                   = var.location
   resource_group_name        = var.resourcegroup_name
-  app_service_plan_id        = azurerm_app_service_plan.api_asp.id
+  app_service_plan_id        = azurerm_app_service_plan.shared_services_asp.id
   storage_account_name       = azurerm_storage_account.api_sa.name
   storage_account_access_key = azurerm_storage_account.api_sa.primary_access_key
   os_type                    = "linux"
@@ -134,5 +134,23 @@ resource "azurerm_function_app" "shared_private_services" {
   site_config {
     linux_fx_version          = "Python|3.9"
     use_32_bit_worker_process = false
+  }
+}
+
+resource "azurerm_private_endpoint" "shared_services_pve" {
+  name                = "shared-services-pve"
+  location            = var.location
+  resource_group_name = var.resourcegroup_name
+  subnet_id           = azurerm_subnet.function_subnet.id
+
+  private_service_connection {
+    name                           = "${azurerm_function_app.shared_private_services.name}-private-service-connection"
+    private_connection_resource_id = azurerm_function_app.shared_private_services.id
+    is_manual_connection           = false
+  }
+
+  tags = {
+    project = var.project_name
+    env     = var.env_name
   }
 }

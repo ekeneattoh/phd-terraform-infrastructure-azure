@@ -92,7 +92,13 @@ resource "azurerm_subscription_policy_assignment" "assignment_1" {
         "Microsoft.Web/sites/config",
         "Microsoft.ContainerRegistry/registries",
         "Microsoft.Storage/storageAccounts",
-        "Microsoft.Insights/components"]
+        "Microsoft.Insights/components",
+        "Microsoft.Network/privateDnsZones",
+        "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+        "Microsoft.Network/virtualNetworks",
+        "Microsoft.Network/virtualNetworks/subnets",
+        "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+        "Microsoft.Network/privateEndpoints"]
   }
 }
 PARAMETERS
