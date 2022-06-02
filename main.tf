@@ -98,7 +98,9 @@ resource "azurerm_subscription_policy_assignment" "assignment_1" {
         "Microsoft.Network/virtualNetworks",
         "Microsoft.Network/virtualNetworks/subnets",
         "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
-        "Microsoft.Network/privateEndpoints"]
+        "Microsoft.Network/privateEndpoints",
+        "Microsoft.Network/networkInterfaces",
+        "Microsoft.Network/privateEndpoints/privateDnsZoneGroups"]
   }
 }
 PARAMETERS

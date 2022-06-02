@@ -55,7 +55,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "shared_services_link" 
   resource_group_name   = var.resourcegroup_name
   private_dns_zone_name = azurerm_private_dns_zone.shared_services_private_zone.name
   virtual_network_id    = azurerm_virtual_network.private_resource_vnet.id
-  registration_enabled = true
+  registration_enabled  = true
 
   tags = {
     project = var.project_name
@@ -128,7 +128,7 @@ resource "azurerm_function_app" "shared_private_services" {
   app_settings = {
     "FUNCTIONS_WORKER_RUNTIME"       = "python"
     "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.app_insights.instrumentation_key
-    "MONGO_DB_URL" = var.mongo_url
+    "MONGO_DB_URL"                   = var.mongo_url
   }
 
   site_config {
@@ -143,10 +143,16 @@ resource "azurerm_private_endpoint" "shared_services_pve" {
   resource_group_name = var.resourcegroup_name
   subnet_id           = azurerm_subnet.function_subnet.id
 
+  private_dns_zone_group {
+    name                 = "privatednszonegroup"
+    private_dns_zone_ids = [azurerm_private_dns_zone.shared_services_private_zone.id]
+  }
+
   private_service_connection {
     name                           = "${azurerm_function_app.shared_private_services.name}-private-service-connection"
     private_connection_resource_id = azurerm_function_app.shared_private_services.id
     is_manual_connection           = false
+    subresource_names              = ["sites"]
   }
 
   tags = {
