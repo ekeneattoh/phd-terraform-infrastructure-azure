@@ -2,7 +2,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.80.0"
+      version = "~>3.00.0"
     }
   }
 }
@@ -100,7 +100,12 @@ resource "azurerm_subscription_policy_assignment" "assignment_1" {
         "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
         "Microsoft.Network/privateEndpoints",
         "Microsoft.Network/networkInterfaces",
-        "Microsoft.Network/privateEndpoints/privateDnsZoneGroups"]
+        "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+        "Microsoft.ApiManagement/service",
+        "Microsoft.ApiManagement/service/backends",
+        "Microsoft.Network/publicIPAddresses",
+        "Microsoft.Network/networkSecurityGroups",
+        "Microsoft.Network/networkSecurityGroups/securityRules"]
   }
 }
 PARAMETERS

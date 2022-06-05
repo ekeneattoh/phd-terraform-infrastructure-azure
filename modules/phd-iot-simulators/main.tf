@@ -1,4 +1,4 @@
-resource "azurerm_app_service_plan" "iot_sim_asp" {
+resource "azurerm_service_plan" "iot_sim_asp" {
   name                = "iot-sim-asp"
   location            = "West Europe"
   resource_group_name = "${var.env_name}-rg"
@@ -27,14 +27,14 @@ resource "azurerm_application_insights" "app_insights" {
 }
 
 
-resource "azurerm_function_app" "phd_iot_simulator" {
+resource "azurerm_linux_function_app" "phd_iot_simulator" {
   name = "phd-iot-simulator"
   depends_on = [
     azurerm_storage_account.function_app_sa
   ]
   location                   = "West Europe"
   resource_group_name        = "${var.env_name}-rg"
-  app_service_plan_id        = azurerm_app_service_plan.iot_sim_asp.id
+  service_plan_id        = azurerm_service_plan.iot_sim_asp.id
   storage_account_name       = azurerm_storage_account.function_app_sa.name
   storage_account_access_key = azurerm_storage_account.function_app_sa.primary_access_key
   os_type                    = "linux"

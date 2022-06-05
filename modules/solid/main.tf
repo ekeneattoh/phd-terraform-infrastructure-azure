@@ -13,7 +13,7 @@ resource "azurerm_container_registry" "acr" {
   }
 }
 
-// resource "azurerm_app_service_plan" "solid_asp" {
+// resource "azurerm_service_plan" "solid_asp" {
 //   name                = "solid-asp"
 //   location            = "West Europe"
 //   resource_group_name = "${var.env_name}-rg"
@@ -30,7 +30,7 @@ resource "azurerm_container_registry" "acr" {
 //   name                = "ea-solid-server"
 //   location            = "West Europe"
 //   resource_group_name = "${var.env_name}-rg"
-//   app_service_plan_id = azurerm_app_service_plan.solid_asp.id
+//   service_plan_id = azurerm_service_plan.solid_asp.id
 
 //   site_config {
 //     linux_fx_version                     = "DOCKER|eaphd.azurecr.io/solid-ea-phd:latest"
