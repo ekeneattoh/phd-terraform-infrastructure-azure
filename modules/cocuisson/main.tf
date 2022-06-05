@@ -344,7 +344,9 @@ resource "azurerm_linux_function_app" "shared_private_services" {
 
   app_settings = {
     "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.app_insights.instrumentation_key
-    "API_BASE_URL"                   = "https://cosmos-crud-api.azurewebsites.net/api/"
+    "API_BASE_URL"                   = var.api_base_url
+    "DB_NAME"                        = var.db_name
+    "SENDGRID_API_KEY"               = var.sendgrid_api_key
   }
 }
 
@@ -478,10 +480,17 @@ resource "azurerm_api_management_api_operation" "atelier_registration_api_op" {
   api_name            = azurerm_api_management_api.shared_services_api.name
   api_management_name = azurerm_api_management.cocuisson_apim.name
   resource_group_name = var.resourcegroup_name
-  display_name        = "Register Belgian Atelier"
+  display_name        = "Register a Belgian Atelier"
   method              = "POST"
   url_template        = "/belgian-atelier"
   description         = "This registers a new Belgian Atelier on the platform"
+
+  request {
+    description = "Register Belgian Atelier"
+    representation {
+      content_type = "application/json"
+    }
+  }
 
   response {
     status_code = 200
@@ -508,6 +517,13 @@ resource "azurerm_api_management_api_operation" "email_notification_api_op" {
   method              = "POST"
   url_template        = "/email-notification"
   description         = "This sends email notifications to users"
+
+  request {
+    description = "Email Notification"
+    representation {
+      content_type = "application/json"
+    }
+  }
 
   response {
     status_code = 200
@@ -560,6 +576,13 @@ resource "azurerm_api_management_api_operation" "atelier_new_four_api_op" {
   url_template        = "/new-four"
   description         = "This creates a new four on the platform"
 
+  request {
+    description = "Create a new four"
+    representation {
+      content_type = "application/json"
+    }
+  }
+
   response {
     status_code = 201
     description = "Returns 201 if successful"
@@ -586,6 +609,13 @@ resource "azurerm_api_management_api_operation" "atelier_new_cuisson_availabilit
   url_template        = "/new-cuisson-avalilability"
   description         = "This creates a new cuisson availability on the platform"
 
+  request {
+    description = "Create a new cuisson availability"
+    representation {
+      content_type = "application/json"
+    }
+  }
+
   response {
     status_code = 201
     description = "Returns 201 if successful"
@@ -608,9 +638,16 @@ resource "azurerm_api_management_api_operation" "atelier_fours_api_op" {
   api_management_name = azurerm_api_management.cocuisson_apim.name
   resource_group_name = var.resourcegroup_name
   display_name        = "List all fours"
-  method              = "GET"
+  method              = "POST"
   url_template        = "/fours"
   description         = "This lists all fours on the platform"
+
+  request {
+    description = "List all fours"
+    representation {
+      content_type = "application/json"
+    }
+  }
 
   response {
     status_code = 200
@@ -637,6 +674,13 @@ resource "azurerm_api_management_api_operation" "atelier_cuisson_update_api_op" 
   method              = "PUT"
   url_template        = "/cuisson-update"
   description         = "This updates a cuisson availability on the platform"
+
+  request {
+    description = "Update cuisson availability"
+    representation {
+      content_type = "application/json"
+    }
+  }
 
   response {
     status_code = 200
@@ -671,6 +715,13 @@ resource "azurerm_api_management_api_operation" "atelier_availability_delete_api
   url_template        = "/cuisson-availability-delete"
   description         = "This deletes a cuisson availabilty from the platform"
 
+  request {
+    description = "Delete a cuisson availability"
+    representation {
+      content_type = "application/json"
+    }
+  }
+
   response {
     status_code = 200
     description = "Returns 200 if successful"
@@ -693,9 +744,16 @@ resource "azurerm_api_management_api_operation" "atelier_cuisson_availabilities_
   api_management_name = azurerm_api_management.cocuisson_apim.name
   resource_group_name = var.resourcegroup_name
   display_name        = "Gets all cuisson availabilities"
-  method              = "GET"
+  method              = "POST"
   url_template        = "/cuisson-availabilities"
   description         = "This gets all availabilties on the platform"
+
+  request {
+    description = "Gets all cuisson availabilities"
+    representation {
+      content_type = "application/json"
+    }
+  }
 
   response {
     status_code = 200
@@ -726,9 +784,16 @@ resource "azurerm_api_management_api_operation" "atelier_atelier_info_api_op" {
   api_management_name = azurerm_api_management.cocuisson_apim.name
   resource_group_name = var.resourcegroup_name
   display_name        = "Gets atelier info"
-  method              = "GET"
+  method              = "POST"
   url_template        = "/atelier-info"
   description         = "This gets atelier info on the platform"
+
+  request {
+    description = "Gets atelier info"
+    representation {
+      content_type = "application/json"
+    }
+  }
 
   response {
     status_code = 200
@@ -776,10 +841,17 @@ resource "azurerm_api_management_api_operation" "ceramiste_new_ceramiste_api_op"
   api_name            = azurerm_api_management_api.cocuisson_ceramiste_api.name
   api_management_name = azurerm_api_management.cocuisson_apim.name
   resource_group_name = var.resourcegroup_name
-  display_name        = "Register new ceramiste"
+  display_name        = "Register a new ceramiste"
   method              = "POST"
   url_template        = "/new-ceramiste"
   description         = "This adds a new ceramiste on the platform"
+
+  request {
+    description = "Register a new ceramiste"
+    representation {
+      content_type = "application/json"
+    }
+  }
 
   response {
     status_code = 201
@@ -802,10 +874,17 @@ resource "azurerm_api_management_api_operation" "ceramiste_ceramiste_info_api_op
   api_name            = azurerm_api_management_api.cocuisson_ceramiste_api.name
   api_management_name = azurerm_api_management.cocuisson_apim.name
   resource_group_name = var.resourcegroup_name
-  display_name        = "Register new ceramiste"
-  method              = "GET"
+  display_name        = "Get ceraminste info"
+  method              = "POST"
   url_template        = "/ceramiste-info"
   description         = "This gets ceramiste info on the platform"
+
+  request {
+    description = "Get ceraminste info"
+    representation {
+      content_type = "application/json"
+    }
+  }
 
   response {
     status_code = 200
@@ -828,10 +907,17 @@ resource "azurerm_api_management_api_operation" "ceramiste_cuisson_availabilitie
   api_name            = azurerm_api_management_api.cocuisson_ceramiste_api.name
   api_management_name = azurerm_api_management.cocuisson_apim.name
   resource_group_name = var.resourcegroup_name
-  display_name        = "Register new ceramiste"
-  method              = "GET"
+  display_name        = "Get cuisson availabilities"
+  method              = "POST"
   url_template        = "/availabilities"
   description         = "This gets all cuisson availabilities on the platform matching a user's search query"
+
+  request {
+    description = "Get cuisson availabilities"
+    representation {
+      content_type = "application/json"
+    }
+  }
 
   response {
     status_code = 200
@@ -887,9 +973,16 @@ resource "azurerm_api_management_api_operation" "order_orders_api_op" {
   api_management_name = azurerm_api_management.cocuisson_apim.name
   resource_group_name = var.resourcegroup_name
   display_name        = "Get all orders"
-  method              = "GET"
+  method              = "POST"
   url_template        = "/orders"
   description         = "This gets all orders on the platform"
+
+  request {
+    description = "Get all orders"
+    representation {
+      content_type = "application/json"
+    }
+  }
 
   response {
     status_code = 200
@@ -924,6 +1017,13 @@ resource "azurerm_api_management_api_operation" "order_order_delete_api_op" {
   url_template        = "/order-delete"
   description         = "This deletes an order from the platform"
 
+  request {
+    description = "Delete order"
+    representation {
+      content_type = "application/json"
+    }
+  }
+
   response {
     status_code = 200
     description = "Returns 200 if successful"
@@ -950,6 +1050,13 @@ resource "azurerm_api_management_api_operation" "order_new_order_api_op" {
   url_template        = "/new-order"
   description         = "This creates a new order on the platform"
 
+  request {
+    description = "Create new order"
+    representation {
+      content_type = "application/json"
+    }
+  }
+
   response {
     status_code = 201
     description = "Returns 201 if successful"
@@ -971,10 +1078,17 @@ resource "azurerm_api_management_api_operation" "order_atelier_order_action_api_
   api_name            = azurerm_api_management_api.cocuisson_order_api.name
   api_management_name = azurerm_api_management.cocuisson_apim.name
   resource_group_name = var.resourcegroup_name
-  display_name        = "Create new order"
+  display_name        = "Perform order action"
   method              = "PUT"
   url_template        = "/atelier-order-action"
   description         = "This updates the statis of an order on the platform"
+
+  request {
+    description = "Perform order action"
+    representation {
+      content_type = "application/json"
+    }
+  }
 
   response {
     status_code = 200

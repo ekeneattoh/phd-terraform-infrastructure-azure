@@ -27,3 +27,7 @@ variable "api_base_url" {
 variable "db_name" {
   type = string
 }
+
+variable "sendgrid_api_key" {
+  type = string
+}
