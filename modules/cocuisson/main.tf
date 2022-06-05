@@ -338,41 +338,144 @@ resource "azurerm_linux_function_app" "shared_private_services" {
       python_version = "3.9"
     }
     ip_restriction {
-      ip_address = join("",concat(azurerm_api_management.cocuisson_apim.public_ip_addresses,["/32"]))
+      ip_address = join("", concat(azurerm_api_management.cocuisson_apim.public_ip_addresses, ["/32"]))
     }
   }
 
   app_settings = {
     "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.app_insights.instrumentation_key
-    "API_BASE_URL" = "https://cosmos-crud-api.azurewebsites.net/api/"
+    "API_BASE_URL"                   = "https://cosmos-crud-api.azurewebsites.net/api/"
   }
 }
 
-resource "azurerm_api_management_backend" "atelier_registration_backend" {
-  name = "atelier-registration-backend"
+resource "azurerm_linux_function_app" "cocuisson_atelier_api" {
+  name = "cocuisson-atelier-api"
+  depends_on = [
+    azurerm_storage_account.api_sa,
+    azurerm_api_management.cocuisson_apim
+  ]
+  location                    = var.location
+  resource_group_name         = var.resourcegroup_name
+  service_plan_id             = azurerm_service_plan.cocuisson_asp.id
+  storage_account_name        = azurerm_storage_account.api_sa.name
+  storage_account_access_key  = azurerm_storage_account.api_sa.primary_access_key
+  functions_extension_version = "~4"
+  https_only                  = true
+  tags = {
+    project = var.project_name
+    env     = var.env_name
+  }
+
+  site_config {
+    application_stack {
+      python_version = "3.9"
+    }
+    ip_restriction {
+      ip_address = join("", concat(azurerm_api_management.cocuisson_apim.public_ip_addresses, ["/32"]))
+    }
+  }
+
+  app_settings = {
+    "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.app_insights.instrumentation_key
+    "API_BASE_URL"                   = var.api_base_url
+    "DB_NAME"                        = var.db_name
+  }
+}
+
+resource "azurerm_linux_function_app" "cocuisson_ceramiste_api" {
+  name = "cocuisson-ceramiste-api"
+  depends_on = [
+    azurerm_storage_account.api_sa,
+    azurerm_api_management.cocuisson_apim
+  ]
+  location                    = var.location
+  resource_group_name         = var.resourcegroup_name
+  service_plan_id             = azurerm_service_plan.cocuisson_asp.id
+  storage_account_name        = azurerm_storage_account.api_sa.name
+  storage_account_access_key  = azurerm_storage_account.api_sa.primary_access_key
+  functions_extension_version = "~4"
+  https_only                  = true
+  tags = {
+    project = var.project_name
+    env     = var.env_name
+  }
+
+  site_config {
+    application_stack {
+      python_version = "3.9"
+    }
+    ip_restriction {
+      ip_address = join("", concat(azurerm_api_management.cocuisson_apim.public_ip_addresses, ["/32"]))
+    }
+  }
+
+  app_settings = {
+    "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.app_insights.instrumentation_key
+    "API_BASE_URL"                   = var.api_base_url
+    "DB_NAME"                        = var.db_name
+  }
+}
+
+resource "azurerm_linux_function_app" "cocuisson_order_api" {
+  name = "cocuisson-order-api"
+  depends_on = [
+    azurerm_storage_account.api_sa,
+    azurerm_api_management.cocuisson_apim
+  ]
+  location                    = var.location
+  resource_group_name         = var.resourcegroup_name
+  service_plan_id             = azurerm_service_plan.cocuisson_asp.id
+  storage_account_name        = azurerm_storage_account.api_sa.name
+  storage_account_access_key  = azurerm_storage_account.api_sa.primary_access_key
+  functions_extension_version = "~4"
+  https_only                  = true
+  tags = {
+    project = var.project_name
+    env     = var.env_name
+  }
+
+  site_config {
+    application_stack {
+      python_version = "3.9"
+    }
+    ip_restriction {
+      ip_address = join("", concat(azurerm_api_management.cocuisson_apim.public_ip_addresses, ["/32"]))
+    }
+  }
+
+  app_settings = {
+    "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.app_insights.instrumentation_key
+    "API_BASE_URL"                   = var.api_base_url
+    "DB_NAME"                        = var.db_name
+  }
+}
+
+resource "azurerm_api_management_backend" "shared_services_backend" {
+  name = "shared-services-backend"
   depends_on = [
     azurerm_linux_function_app.shared_private_services
   ]
   resource_group_name = var.resourcegroup_name
   api_management_name = azurerm_api_management.cocuisson_apim.name
   protocol            = "http"
-  url                 = "https://shared-private-services.azurewebsites.net/api/belgian-atelier"
+  url                 = "https://shared-private-services.azurewebsites.net/api/"
 }
 
-resource "azurerm_api_management_api" "atelier_registration_api" {
-  name                = "atelier-registration-api"
+resource "azurerm_api_management_api" "shared_services_api" {
+  name                = "shared-services-api"
   resource_group_name = var.resourcegroup_name
   api_management_name = azurerm_api_management.cocuisson_apim.name
   revision            = "1"
-  display_name        = "Atelier Registration API"
+  display_name        = "Shared Services API"
   protocols           = ["https"]
+  path                = "shared"
 
   service_url = "https://shared-private-services.azurewebsites.net/api"
 }
 
 resource "azurerm_api_management_api_operation" "atelier_registration_api_op" {
   operation_id        = "belgian-atelier"
-  api_name            = azurerm_api_management_api.atelier_registration_api.name
+  api_name            = azurerm_api_management_api.shared_services_api.name
   api_management_name = azurerm_api_management.cocuisson_apim.name
   resource_group_name = var.resourcegroup_name
   display_name        = "Register Belgian Atelier"
@@ -382,5 +485,516 @@ resource "azurerm_api_management_api_operation" "atelier_registration_api_op" {
 
   response {
     status_code = 200
+    description = "Returns 200 if successful"
+    representation {
+      content_type = "application/json"
+    }
+  }
+  response {
+    status_code = 400
+    description = "Returns 400 if unsuccessful"
+    representation {
+      content_type = "application/json"
+    }
+  }
+}
+
+resource "azurerm_api_management_api_operation" "email_notification_api_op" {
+  operation_id        = "email-notification"
+  api_name            = azurerm_api_management_api.shared_services_api.name
+  api_management_name = azurerm_api_management.cocuisson_apim.name
+  resource_group_name = var.resourcegroup_name
+  display_name        = "Email Notification"
+  method              = "POST"
+  url_template        = "/email-notification"
+  description         = "This sends email notifications to users"
+
+  response {
+    status_code = 200
+    description = "Returns 200 if successful"
+    representation {
+      content_type = "application/json"
+    }
+  }
+  response {
+    status_code = 400
+    description = "Returns 400 if unsuccessful"
+    representation {
+      content_type = "application/json"
+    }
+  }
+}
+
+resource "azurerm_api_management_backend" "cocuisson_atelier_api_backend" {
+  name = "cocuisson-atelier-api-backend"
+  depends_on = [
+    azurerm_linux_function_app.cocuisson_atelier_api,
+    azurerm_linux_function_app.cocuisson_ceramiste_api,
+    azurerm_linux_function_app.cocuisson_order_api
+  ]
+  resource_group_name = var.resourcegroup_name
+  api_management_name = azurerm_api_management.cocuisson_apim.name
+  protocol            = "http"
+  url                 = "https://cocuisson-atelier-api.azurewebsites.net/api/"
+}
+
+resource "azurerm_api_management_api" "cocuisson_atelier_api" {
+  name                = "cocuisson-atelier-api"
+  resource_group_name = var.resourcegroup_name
+  api_management_name = azurerm_api_management.cocuisson_apim.name
+  revision            = "1"
+  display_name        = "Atelier API"
+  protocols           = ["https"]
+  path                = "atelier"
+
+  service_url = "https://cocuisson-atelier-api.azurewebsites.net/api/"
+}
+
+resource "azurerm_api_management_api_operation" "atelier_new_four_api_op" {
+  operation_id        = "new-four"
+  api_name            = azurerm_api_management_api.cocuisson_atelier_api.name
+  api_management_name = azurerm_api_management.cocuisson_apim.name
+  resource_group_name = var.resourcegroup_name
+  display_name        = "Create a new four"
+  method              = "POST"
+  url_template        = "/new-four"
+  description         = "This creates a new four on the platform"
+
+  response {
+    status_code = 201
+    description = "Returns 201 if successful"
+    representation {
+      content_type = "application/json"
+    }
+  }
+  response {
+    status_code = 400
+    description = "Returns 400 if unsuccessful"
+    representation {
+      content_type = "application/json"
+    }
+  }
+}
+
+resource "azurerm_api_management_api_operation" "atelier_new_cuisson_availability_api_op" {
+  operation_id        = "new-cuisson-avalilability"
+  api_name            = azurerm_api_management_api.cocuisson_atelier_api.name
+  api_management_name = azurerm_api_management.cocuisson_apim.name
+  resource_group_name = var.resourcegroup_name
+  display_name        = "Create a new cuisson availability"
+  method              = "POST"
+  url_template        = "/new-cuisson-avalilability"
+  description         = "This creates a new cuisson availability on the platform"
+
+  response {
+    status_code = 201
+    description = "Returns 201 if successful"
+    representation {
+      content_type = "application/json"
+    }
+  }
+  response {
+    status_code = 400
+    description = "Returns 400 if unsuccessful"
+    representation {
+      content_type = "application/json"
+    }
+  }
+}
+
+resource "azurerm_api_management_api_operation" "atelier_fours_api_op" {
+  operation_id        = "fours"
+  api_name            = azurerm_api_management_api.cocuisson_atelier_api.name
+  api_management_name = azurerm_api_management.cocuisson_apim.name
+  resource_group_name = var.resourcegroup_name
+  display_name        = "List all fours"
+  method              = "GET"
+  url_template        = "/fours"
+  description         = "This lists all fours on the platform"
+
+  response {
+    status_code = 200
+    description = "Returns 200 if successful"
+    representation {
+      content_type = "application/json"
+    }
+  }
+  response {
+    status_code = 404
+    description = "Returns 404 if not found"
+    representation {
+      content_type = "application/json"
+    }
+  }
+}
+
+resource "azurerm_api_management_api_operation" "atelier_cuisson_update_api_op" {
+  operation_id        = "cuisson-update"
+  api_name            = azurerm_api_management_api.cocuisson_atelier_api.name
+  api_management_name = azurerm_api_management.cocuisson_apim.name
+  resource_group_name = var.resourcegroup_name
+  display_name        = "Update cuisson availability"
+  method              = "PUT"
+  url_template        = "/cuisson-update"
+  description         = "This updates a cuisson availability on the platform"
+
+  response {
+    status_code = 200
+    description = "Returns 200 if successful"
+    representation {
+      content_type = "application/json"
+    }
+  }
+  response {
+    status_code = 400
+    description = "Returns 400 if unsuccessful"
+    representation {
+      content_type = "application/json"
+    }
+  }
+  response {
+    status_code = 404
+    description = "Returns 404 if not found"
+    representation {
+      content_type = "application/json"
+    }
+  }
+}
+
+resource "azurerm_api_management_api_operation" "atelier_availability_delete_api_op" {
+  operation_id        = "cuisson-availability-delete"
+  api_name            = azurerm_api_management_api.cocuisson_atelier_api.name
+  api_management_name = azurerm_api_management.cocuisson_apim.name
+  resource_group_name = var.resourcegroup_name
+  display_name        = "Delete a cuisson availability"
+  method              = "DELETE"
+  url_template        = "/cuisson-availability-delete"
+  description         = "This deletes a cuisson availabilty from the platform"
+
+  response {
+    status_code = 200
+    description = "Returns 200 if successful"
+    representation {
+      content_type = "application/json"
+    }
+  }
+  response {
+    status_code = 404
+    description = "Returns 404 if not found"
+    representation {
+      content_type = "application/json"
+    }
+  }
+}
+
+resource "azurerm_api_management_api_operation" "atelier_cuisson_availabilities_api_op" {
+  operation_id        = "cuisson-availabilities"
+  api_name            = azurerm_api_management_api.cocuisson_atelier_api.name
+  api_management_name = azurerm_api_management.cocuisson_apim.name
+  resource_group_name = var.resourcegroup_name
+  display_name        = "Gets all cuisson availabilities"
+  method              = "GET"
+  url_template        = "/cuisson-availabilities"
+  description         = "This gets all availabilties on the platform"
+
+  response {
+    status_code = 200
+    description = "Returns 200 if successful"
+    representation {
+      content_type = "application/json"
+    }
+  }
+  response {
+    status_code = 400
+    description = "Returns 400 if unsuccessful"
+    representation {
+      content_type = "application/json"
+    }
+  }
+  response {
+    status_code = 404
+    description = "Returns 404 if not found"
+    representation {
+      content_type = "application/json"
+    }
+  }
+}
+
+resource "azurerm_api_management_api_operation" "atelier_atelier_info_api_op" {
+  operation_id        = "atelier-info"
+  api_name            = azurerm_api_management_api.cocuisson_atelier_api.name
+  api_management_name = azurerm_api_management.cocuisson_apim.name
+  resource_group_name = var.resourcegroup_name
+  display_name        = "Gets atelier info"
+  method              = "GET"
+  url_template        = "/atelier-info"
+  description         = "This gets atelier info on the platform"
+
+  response {
+    status_code = 200
+    description = "Returns 200 if successful"
+    representation {
+      content_type = "application/json"
+    }
+  }
+  response {
+    status_code = 404
+    description = "Returns 404 if not found"
+    representation {
+      content_type = "application/json"
+    }
+  }
+}
+
+resource "azurerm_api_management_backend" "cocuisson_ceramiste_api_backend" {
+  name = "cocuisson-ceramiste-api-backend"
+  depends_on = [
+    azurerm_linux_function_app.cocuisson_atelier_api,
+    azurerm_linux_function_app.cocuisson_ceramiste_api,
+    azurerm_linux_function_app.cocuisson_order_api
+  ]
+  resource_group_name = var.resourcegroup_name
+  api_management_name = azurerm_api_management.cocuisson_apim.name
+  protocol            = "http"
+  url                 = "https://cocuisson-ceramiste-api.azurewebsites.net/api/"
+}
+
+resource "azurerm_api_management_api" "cocuisson_ceramiste_api" {
+  name                = "cocuisson-ceramiste-api"
+  resource_group_name = var.resourcegroup_name
+  api_management_name = azurerm_api_management.cocuisson_apim.name
+  revision            = "1"
+  display_name        = "Ceramiste API"
+  protocols           = ["https"]
+  path                = "ceramiste"
+
+  service_url = "https://cocuisson-ceramiste-api.azurewebsites.net/api/"
+}
+
+resource "azurerm_api_management_api_operation" "ceramiste_new_ceramiste_api_op" {
+  operation_id        = "new-ceramiste"
+  api_name            = azurerm_api_management_api.cocuisson_ceramiste_api.name
+  api_management_name = azurerm_api_management.cocuisson_apim.name
+  resource_group_name = var.resourcegroup_name
+  display_name        = "Register new ceramiste"
+  method              = "POST"
+  url_template        = "/new-ceramiste"
+  description         = "This adds a new ceramiste on the platform"
+
+  response {
+    status_code = 201
+    description = "Returns 201 if successful"
+    representation {
+      content_type = "application/json"
+    }
+  }
+  response {
+    status_code = 400
+    description = "Returns 400 if unsuccessful"
+    representation {
+      content_type = "application/json"
+    }
+  }
+}
+
+resource "azurerm_api_management_api_operation" "ceramiste_ceramiste_info_api_op" {
+  operation_id        = "ceramiste-info"
+  api_name            = azurerm_api_management_api.cocuisson_ceramiste_api.name
+  api_management_name = azurerm_api_management.cocuisson_apim.name
+  resource_group_name = var.resourcegroup_name
+  display_name        = "Register new ceramiste"
+  method              = "GET"
+  url_template        = "/ceramiste-info"
+  description         = "This gets ceramiste info on the platform"
+
+  response {
+    status_code = 200
+    description = "Returns 200 if successful"
+    representation {
+      content_type = "application/json"
+    }
+  }
+  response {
+    status_code = 404
+    description = "Returns 404 if not found"
+    representation {
+      content_type = "application/json"
+    }
+  }
+}
+
+resource "azurerm_api_management_api_operation" "ceramiste_cuisson_availabilities_api_op" {
+  operation_id        = "availabilities"
+  api_name            = azurerm_api_management_api.cocuisson_ceramiste_api.name
+  api_management_name = azurerm_api_management.cocuisson_apim.name
+  resource_group_name = var.resourcegroup_name
+  display_name        = "Register new ceramiste"
+  method              = "GET"
+  url_template        = "/availabilities"
+  description         = "This gets all cuisson availabilities on the platform matching a user's search query"
+
+  response {
+    status_code = 200
+    description = "Returns 200 if successful"
+    representation {
+      content_type = "application/json"
+    }
+  }
+  response {
+    status_code = 400
+    description = "Returns 400 if unsuccessful"
+    representation {
+      content_type = "application/json"
+    }
+  }
+  response {
+    status_code = 404
+    description = "Returns 404 if not found"
+    representation {
+      content_type = "application/json"
+    }
+  }
+}
+
+resource "azurerm_api_management_backend" "cocuisson_order_api_backend" {
+  name = "cocuisson-order-api-backend"
+  depends_on = [
+    azurerm_linux_function_app.cocuisson_atelier_api,
+    azurerm_linux_function_app.cocuisson_ceramiste_api,
+    azurerm_linux_function_app.cocuisson_order_api
+  ]
+  resource_group_name = var.resourcegroup_name
+  api_management_name = azurerm_api_management.cocuisson_apim.name
+  protocol            = "http"
+  url                 = "https://cocuisson-order-api.azurewebsites.net/api/"
+}
+
+resource "azurerm_api_management_api" "cocuisson_order_api" {
+  name                = "cocuisson-order-api"
+  resource_group_name = var.resourcegroup_name
+  api_management_name = azurerm_api_management.cocuisson_apim.name
+  revision            = "1"
+  display_name        = "Order API"
+  protocols           = ["https"]
+  path                = "order"
+
+  service_url = "https://cocuisson-order-api.azurewebsites.net/api/"
+}
+
+resource "azurerm_api_management_api_operation" "order_orders_api_op" {
+  operation_id        = "orders"
+  api_name            = azurerm_api_management_api.cocuisson_order_api.name
+  api_management_name = azurerm_api_management.cocuisson_apim.name
+  resource_group_name = var.resourcegroup_name
+  display_name        = "Get all orders"
+  method              = "GET"
+  url_template        = "/orders"
+  description         = "This gets all orders on the platform"
+
+  response {
+    status_code = 200
+    description = "Returns 200 if successful"
+    representation {
+      content_type = "application/json"
+    }
+  }
+  response {
+    status_code = 400
+    description = "Returns 400 if unsuccessful"
+    representation {
+      content_type = "application/json"
+    }
+  }
+  response {
+    status_code = 404
+    description = "Returns 404 if not found"
+    representation {
+      content_type = "application/json"
+    }
+  }
+}
+
+resource "azurerm_api_management_api_operation" "order_order_delete_api_op" {
+  operation_id        = "order-delete"
+  api_name            = azurerm_api_management_api.cocuisson_order_api.name
+  api_management_name = azurerm_api_management.cocuisson_apim.name
+  resource_group_name = var.resourcegroup_name
+  display_name        = "Delete order"
+  method              = "DELETE"
+  url_template        = "/order-delete"
+  description         = "This deletes an order from the platform"
+
+  response {
+    status_code = 200
+    description = "Returns 200 if successful"
+    representation {
+      content_type = "application/json"
+    }
+  }
+  response {
+    status_code = 404
+    description = "Returns 404 if not found"
+    representation {
+      content_type = "application/json"
+    }
+  }
+}
+
+resource "azurerm_api_management_api_operation" "order_new_order_api_op" {
+  operation_id        = "new-order"
+  api_name            = azurerm_api_management_api.cocuisson_order_api.name
+  api_management_name = azurerm_api_management.cocuisson_apim.name
+  resource_group_name = var.resourcegroup_name
+  display_name        = "Create new order"
+  method              = "POST"
+  url_template        = "/new-order"
+  description         = "This creates a new order on the platform"
+
+  response {
+    status_code = 201
+    description = "Returns 201 if successful"
+    representation {
+      content_type = "application/json"
+    }
+  }
+  response {
+    status_code = 400
+    description = "Returns 400 if unsuccessful"
+    representation {
+      content_type = "application/json"
+    }
+  }
+}
+
+resource "azurerm_api_management_api_operation" "order_atelier_order_action_api_op" {
+  operation_id        = "atelier-order-action"
+  api_name            = azurerm_api_management_api.cocuisson_order_api.name
+  api_management_name = azurerm_api_management.cocuisson_apim.name
+  resource_group_name = var.resourcegroup_name
+  display_name        = "Create new order"
+  method              = "PUT"
+  url_template        = "/atelier-order-action"
+  description         = "This updates the statis of an order on the platform"
+
+  response {
+    status_code = 200
+    description = "Returns 200 if successful"
+    representation {
+      content_type = "application/json"
+    }
+  }
+  response {
+    status_code = 400
+    description = "Returns 400 if unsuccessful"
+    representation {
+      content_type = "application/json"
+    }
+  }
+  response {
+    status_code = 404
+    description = "Returns 404 if not found"
+    representation {
+      content_type = "application/json"
+    }
   }
 }

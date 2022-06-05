@@ -7,15 +7,23 @@ variable "project_name" {
 }
 
 variable "location" {
-  type = string
+  type    = string
   default = "westeurope"
 }
 
 variable "resourcegroup_name" {
-  type = string
+  type    = string
   default = "cocuisson-dev-rg"
 }
 
 variable "mongo_url" {
+  type = string
+}
+
+variable "api_base_url" {
+  type = string
+}
+
+variable "db_name" {
   type = string
 }
