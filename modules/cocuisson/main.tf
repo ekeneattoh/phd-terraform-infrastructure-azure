@@ -176,6 +176,15 @@ resource "azurerm_subnet" "cocuisson_subnet" {
   virtual_network_name = azurerm_virtual_network.external_api_vnet.name
   address_prefixes     = ["10.1.0.0/26"]
 
+  delegation {
+    name = "cocuisson-delegation"
+
+    service_delegation {
+      name    = "Microsoft.Web/serverFarms"
+      actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
+    }
+  }
+
 }
 
 resource "azurerm_subnet" "management_subnet" {
@@ -187,6 +196,33 @@ resource "azurerm_subnet" "management_subnet" {
   virtual_network_name = azurerm_virtual_network.external_api_vnet.name
   address_prefixes     = ["10.1.0.64/26"]
 
+}
+
+resource "azurerm_virtual_network_peering" "private_resource_peer" {
+  name                      = "peerpvttoext"
+  resource_group_name = var.resourcegroup_name
+  virtual_network_name      = azurerm_virtual_network.private_resource_vnet.name
+  remote_virtual_network_id = azurerm_virtual_network.external_api_vnet.id
+}
+
+resource "azurerm_virtual_network_peering" "external_api_peer" {
+  name                      = "peerexttopvt"
+  resource_group_name = var.resourcegroup_name
+  virtual_network_name      = azurerm_virtual_network.external_api_vnet.name
+  remote_virtual_network_id = azurerm_virtual_network.private_resource_vnet.id
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "external_api_link" {
+  name                  = "external-api-link"
+  resource_group_name   = var.resourcegroup_name
+  private_dns_zone_name = azurerm_private_dns_zone.shared_services_private_zone.name
+  virtual_network_id    = azurerm_virtual_network.external_api_vnet.id
+  registration_enabled  = true
+
+  tags = {
+    project = var.project_name
+    env     = var.env_name
+  }
 }
 
 resource "azurerm_network_security_group" "apim_nsg" {
@@ -350,6 +386,11 @@ resource "azurerm_linux_function_app" "shared_private_services" {
   }
 }
 
+resource "azurerm_app_service_virtual_network_swift_connection" "shared_private_services_vnet_int" {
+  app_service_id = azurerm_linux_function_app.shared_private_services.id
+  subnet_id      = azurerm_subnet.cocuisson_subnet.id
+}
+
 resource "azurerm_linux_function_app" "cocuisson_atelier_api" {
   name = "cocuisson-atelier-api"
   depends_on = [
@@ -382,6 +423,11 @@ resource "azurerm_linux_function_app" "cocuisson_atelier_api" {
     "API_BASE_URL"                   = var.api_base_url
     "DB_NAME"                        = var.db_name
   }
+}
+
+resource "azurerm_app_service_virtual_network_swift_connection" "cocuisson_atelier_api_vnet_int" {
+  app_service_id = azurerm_linux_function_app.cocuisson_atelier_api.id
+  subnet_id      = azurerm_subnet.cocuisson_subnet.id
 }
 
 resource "azurerm_linux_function_app" "cocuisson_ceramiste_api" {
@@ -418,6 +464,11 @@ resource "azurerm_linux_function_app" "cocuisson_ceramiste_api" {
   }
 }
 
+resource "azurerm_app_service_virtual_network_swift_connection" "cocuisson_ceramiste_api_vnet_int" {
+  app_service_id = azurerm_linux_function_app.cocuisson_ceramiste_api.id
+  subnet_id      = azurerm_subnet.cocuisson_subnet.id
+}
+
 resource "azurerm_linux_function_app" "cocuisson_order_api" {
   name = "cocuisson-order-api"
   depends_on = [
@@ -450,6 +501,11 @@ resource "azurerm_linux_function_app" "cocuisson_order_api" {
     "API_BASE_URL"                   = var.api_base_url
     "DB_NAME"                        = var.db_name
   }
+}
+
+resource "azurerm_app_service_virtual_network_swift_connection" "cocuisson_order_api_vnet_int" {
+  app_service_id = azurerm_linux_function_app.cocuisson_order_api.id
+  subnet_id      = azurerm_subnet.cocuisson_subnet.id
 }
 
 resource "azurerm_api_management_backend" "shared_services_backend" {
