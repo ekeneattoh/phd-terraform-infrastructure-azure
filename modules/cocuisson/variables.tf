@@ -31,3 +31,8 @@ variable "db_name" {
 variable "sendgrid_api_key" {
   type = string
 }
+
+variable "cosmos_location" {
+  type    = string
+  default = "westus"
+}

@@ -105,7 +105,11 @@ resource "azurerm_subscription_policy_assignment" "assignment_1" {
         "Microsoft.ApiManagement/service/backends",
         "Microsoft.Network/publicIPAddresses",
         "Microsoft.Network/networkSecurityGroups",
-        "Microsoft.Network/networkSecurityGroups/securityRules"]
+        "Microsoft.Network/networkSecurityGroups/securityRules",
+        "Microsoft.DocumentDB/databaseAccounts",
+        "Microsoft.DocumentDB/databaseAccounts/apis/databases",
+        "Microsoft.DocumentDB/databaseAccounts/apis/databases/collections",
+        "Microsoft.DocumentDB/databaseAccounts/apis/databases/containers"]
   }
 }
 PARAMETERS

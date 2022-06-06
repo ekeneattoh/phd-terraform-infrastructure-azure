@@ -10,6 +10,16 @@ resource "azurerm_private_dns_zone" "shared_services_private_zone" {
   }
 }
 
+resource "azurerm_private_dns_zone" "cosmos_db_private_zone" {
+  name                = "privatelink.mongo.cosmos.azure.com"
+  resource_group_name = var.resourcegroup_name
+
+  tags = {
+    project = var.project_name
+    env     = var.env_name
+  }
+}
+
 resource "azurerm_virtual_network" "private_resource_vnet" {
 
   name = "private-resource-vnet"
@@ -26,8 +36,8 @@ resource "azurerm_virtual_network" "private_resource_vnet" {
   }
 }
 
-resource "azurerm_subnet" "function_subnet" {
-  name = "function-subnet"
+resource "azurerm_subnet" "private_resources_subnet" {
+  name = "private-resources-subnet"
   depends_on = [
     azurerm_virtual_network.private_resource_vnet
   ]
@@ -63,6 +73,19 @@ resource "azurerm_private_dns_zone_virtual_network_link" "shared_services_link" 
   }
 }
 
+resource "azurerm_private_dns_zone_virtual_network_link" "private_resources_link_cosmos" {
+  name                  = "private-resources-link-cosmos"
+  resource_group_name   = var.resourcegroup_name
+  private_dns_zone_name = azurerm_private_dns_zone.cosmos_db_private_zone.name
+  virtual_network_id    = azurerm_virtual_network.private_resource_vnet.id
+  registration_enabled  = false
+
+  tags = {
+    project = var.project_name
+    env     = var.env_name
+  }
+}
+
 resource "azurerm_service_plan" "cocuisson_asp" {
   name                = "${var.project_name}-sp"
   location            = var.location
@@ -89,6 +112,72 @@ resource "azurerm_storage_account" "api_sa" {
   }
 }
 
+resource "azurerm_cosmosdb_account" "cocuisson_db" {
+  name                = "${var.project_name}-cosmos-db"
+  resource_group_name = var.resourcegroup_name
+  location            = var.cosmos_location
+  offer_type          = "Standard"
+  kind                = "MongoDB"
+
+  enable_automatic_failover = false
+
+  mongo_server_version = "4.0"
+
+  capabilities {
+    name = "EnableServerless"
+  }
+
+  public_network_access_enabled = false
+
+  backup {
+    type                = "Periodic"
+    storage_redundancy  = "Local"
+    interval_in_minutes = "120"
+    retention_in_hours  = "48"
+  }
+
+  geo_location {
+    location          = var.cosmos_location
+    failover_priority = 0
+  }
+
+  consistency_policy {
+    consistency_level = "Strong"
+  }
+
+  ip_range_filter = "104.42.195.92,40.76.54.131,52.176.6.30,52.169.50.45,52.187.184.26"
+}
+
+resource "azurerm_cosmosdb_mongo_database" "cocuisson_mongo_db" {
+  name                = "${var.project_name}-mongo-db"
+  resource_group_name = var.resourcegroup_name
+  account_name        = azurerm_cosmosdb_account.cocuisson_db.name
+}
+
+resource "azurerm_private_endpoint" "cocuisson_db_pve" {
+  name                = "cocuisson-db-pve"
+  location            = var.location
+  resource_group_name = var.resourcegroup_name
+  subnet_id           = azurerm_subnet.private_endpoint_subnet.id
+
+  private_dns_zone_group {
+    name                 = "privatednszonegroupcosmos"
+    private_dns_zone_ids = [azurerm_private_dns_zone.cosmos_db_private_zone.id]
+  }
+
+  private_service_connection {
+    name                           = "${azurerm_cosmosdb_account.cocuisson_db.name}-private-service-connection"
+    private_connection_resource_id = azurerm_cosmosdb_account.cocuisson_db.id
+    is_manual_connection           = false
+    subresource_names              = ["MongoDB"]
+  }
+
+  tags = {
+    project = var.project_name
+    env     = var.env_name
+  }
+}
+
 resource "azurerm_application_insights" "app_insights" {
   name                = "api-insights"
   location            = var.location
@@ -104,7 +193,8 @@ resource "azurerm_application_insights" "app_insights" {
 resource "azurerm_linux_function_app" "cosmos_crud_api" {
   name = "cosmos-crud-api"
   depends_on = [
-    azurerm_storage_account.api_sa
+    azurerm_storage_account.api_sa,
+    azurerm_cosmosdb_account.cocuisson_db
   ]
   location                    = var.location
   resource_group_name         = var.resourcegroup_name
@@ -126,7 +216,7 @@ resource "azurerm_linux_function_app" "cosmos_crud_api" {
 
   app_settings = {
     "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.app_insights.instrumentation_key
-    "MONGO_DB_URL"                   = var.mongo_url
+    "MONGO_DB_URL"                   = element(azurerm_cosmosdb_account.cocuisson_db.connection_strings, 0)
   }
 }
 
@@ -134,10 +224,10 @@ resource "azurerm_private_endpoint" "cosmos_crud_api_pve" {
   name                = "cosmos-crud-api-pve"
   location            = var.location
   resource_group_name = var.resourcegroup_name
-  subnet_id           = azurerm_subnet.function_subnet.id
+  subnet_id           = azurerm_subnet.private_endpoint_subnet.id
 
   private_dns_zone_group {
-    name                 = "privatednszonegroup"
+    name                 = "privatednszonegroupfunction"
     private_dns_zone_ids = [azurerm_private_dns_zone.shared_services_private_zone.id]
   }
 
@@ -200,14 +290,14 @@ resource "azurerm_subnet" "management_subnet" {
 
 resource "azurerm_virtual_network_peering" "private_resource_peer" {
   name                      = "peerpvttoext"
-  resource_group_name = var.resourcegroup_name
+  resource_group_name       = var.resourcegroup_name
   virtual_network_name      = azurerm_virtual_network.private_resource_vnet.name
   remote_virtual_network_id = azurerm_virtual_network.external_api_vnet.id
 }
 
 resource "azurerm_virtual_network_peering" "external_api_peer" {
   name                      = "peerexttopvt"
-  resource_group_name = var.resourcegroup_name
+  resource_group_name       = var.resourcegroup_name
   virtual_network_name      = azurerm_virtual_network.external_api_vnet.name
   remote_virtual_network_id = azurerm_virtual_network.private_resource_vnet.id
 }
