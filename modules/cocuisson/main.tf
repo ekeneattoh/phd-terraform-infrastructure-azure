@@ -1,6 +1,6 @@
 # contains the resources necessary for cocuisson mvp
 
-resource "azurerm_private_dns_zone" "shared_services_private_zone" {
+resource "azurerm_private_dns_zone" "function_apis_private_zone" {
   name                = "privatelink.azurewebsites.net"
   resource_group_name = var.resourcegroup_name
 
@@ -20,11 +20,21 @@ resource "azurerm_private_dns_zone" "cosmos_db_private_zone" {
   }
 }
 
+/* resource "azurerm_private_dns_zone" "cosmos_db_private_zone_2" {
+  name                = "privatelink.documents.azure.com"
+  resource_group_name = var.resourcegroup_name
+
+  tags = {
+    project = var.project_name
+    env     = var.env_name
+  }
+} */
+
 resource "azurerm_virtual_network" "private_resource_vnet" {
 
   name = "private-resource-vnet"
   depends_on = [
-    azurerm_private_dns_zone.shared_services_private_zone
+    azurerm_private_dns_zone.function_apis_private_zone
   ]
   location            = var.location
   resource_group_name = var.resourcegroup_name
@@ -43,9 +53,32 @@ resource "azurerm_subnet" "private_resources_subnet" {
   ]
   resource_group_name  = var.resourcegroup_name
   virtual_network_name = azurerm_virtual_network.private_resource_vnet.name
-  address_prefixes     = ["10.0.0.0/28"]
+  address_prefixes     = ["10.0.0.0/29"]
 
   enforce_private_link_service_network_policies = true
+}
+
+resource "azurerm_subnet" "cosmos_crud_api_subnet" {
+  name = "cosmos-crud-api-subnet"
+  depends_on = [
+    azurerm_virtual_network.private_resource_vnet
+  ]
+  resource_group_name  = var.resourcegroup_name
+  virtual_network_name = azurerm_virtual_network.private_resource_vnet.name
+  address_prefixes     = ["10.0.0.8/29"]
+
+  enforce_private_link_service_network_policies = true
+
+  delegation {
+    name = "cocuisson-delegation"
+
+    service_delegation {
+      name    = "Microsoft.Web/serverFarms"
+      actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
+    }
+  }
+
+  service_endpoints = ["Microsoft.Storage"]
 }
 
 resource "azurerm_subnet" "private_endpoint_subnet" {
@@ -60,10 +93,55 @@ resource "azurerm_subnet" "private_endpoint_subnet" {
   enforce_private_link_service_network_policies = true
 }
 
-resource "azurerm_private_dns_zone_virtual_network_link" "shared_services_link" {
-  name                  = "shared-services-link"
+resource "azurerm_network_security_group" "cosmos_crud_api_nsg" {
+  name                = "cosmos-crud-api-nsg"
+  location            = var.location
+  resource_group_name = var.resourcegroup_name
+
+  tags = {
+    project = var.project_name
+    env     = var.env_name
+  }
+}
+
+resource "azurerm_network_security_rule" "rule_1_cosmos_crud_api" {
+  name                        = "allow-out-vnet-to-cosmos"
+  priority                    = 3900
+  direction                   = "Outbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  source_port_range           = "*"
+  destination_port_ranges     = ["10250", "10255", "10256"]
+  source_address_prefix       = "VirtualNetwork"
+  destination_address_prefix  = "AzureCosmosDB"
+  resource_group_name         = var.resourcegroup_name
+  network_security_group_name = azurerm_network_security_group.cosmos_crud_api_nsg.name
+}
+
+resource "azurerm_network_security_rule" "rule_2_cosmos_crud_api" {
+  name                        = "allow-out-vnet-to-cosmos"
+  priority                    = 3800
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  source_port_range           = "*"
+  destination_port_range      = "*"
+  source_address_prefix       = "*"
+  destination_address_prefix  = "VirtualNetwork"
+  resource_group_name         = var.resourcegroup_name
+  network_security_group_name = azurerm_network_security_group.cosmos_crud_api_nsg.name
+}
+
+/* resource "azurerm_subnet_network_security_group_association" "cosmos_crud_api_nsg_association" {
+  subnet_id                 = azurerm_subnet.cosmos_crud_api_subnet.id
+  network_security_group_id = azurerm_network_security_group.cosmos_crud_api_nsg.id
+} */
+
+
+resource "azurerm_private_dns_zone_virtual_network_link" "cosmos_crud_api_link" {
+  name                  = "cosmos-crud-api-link"
   resource_group_name   = var.resourcegroup_name
-  private_dns_zone_name = azurerm_private_dns_zone.shared_services_private_zone.name
+  private_dns_zone_name = azurerm_private_dns_zone.function_apis_private_zone.name
   virtual_network_id    = azurerm_virtual_network.private_resource_vnet.id
   registration_enabled  = true
 
@@ -86,6 +164,19 @@ resource "azurerm_private_dns_zone_virtual_network_link" "private_resources_link
   }
 }
 
+/* resource "azurerm_private_dns_zone_virtual_network_link" "private_resources_link_cosmos_2" {
+  name                  = "private-resources-link-cosmos_2"
+  resource_group_name   = var.resourcegroup_name
+  private_dns_zone_name = azurerm_private_dns_zone.cosmos_db_private_zone_2.name
+  virtual_network_id    = azurerm_virtual_network.private_resource_vnet.id
+  registration_enabled  = false
+
+  tags = {
+    project = var.project_name
+    env     = var.env_name
+  }
+} */
+
 resource "azurerm_service_plan" "cocuisson_asp" {
   name                = "${var.project_name}-sp"
   location            = var.location
@@ -98,6 +189,20 @@ resource "azurerm_service_plan" "cocuisson_asp" {
     env     = var.env_name
   }
 }
+
+resource "azurerm_service_plan" "private_api_asp" {
+  name                = "private-api-sp"
+  location            = var.location
+  resource_group_name = var.resourcegroup_name
+  os_type             = "Linux"
+  sku_name            = "P1v2"
+
+  tags = {
+    project = var.project_name
+    env     = var.env_name
+  }
+}
+
 
 resource "azurerm_storage_account" "api_sa" {
   name                     = "${var.project_name}sa"
@@ -194,11 +299,12 @@ resource "azurerm_linux_function_app" "cosmos_crud_api" {
   name = "cosmos-crud-api"
   depends_on = [
     azurerm_storage_account.api_sa,
-    azurerm_cosmosdb_account.cocuisson_db
+    azurerm_cosmosdb_account.cocuisson_db,
+    azurerm_subnet.cosmos_crud_api_subnet
   ]
   location                    = var.location
   resource_group_name         = var.resourcegroup_name
-  service_plan_id             = azurerm_service_plan.cocuisson_asp.id
+  service_plan_id             = azurerm_service_plan.private_api_asp.id
   storage_account_name        = azurerm_storage_account.api_sa.name
   storage_account_access_key  = azurerm_storage_account.api_sa.primary_access_key
   functions_extension_version = "~4"
@@ -216,8 +322,15 @@ resource "azurerm_linux_function_app" "cosmos_crud_api" {
 
   app_settings = {
     "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.app_insights.instrumentation_key
-    "MONGO_DB_URL"                   = element(azurerm_cosmosdb_account.cocuisson_db.connection_strings, 0)
+    "MONGO_DB_URL"                   = element(azurerm_cosmosdb_account.cocuisson_db.connection_strings, 0),
+    "WEBSITE_DNS_SERVER"             = "168.63.129.16"
+    "WEBSITE_VNET_ROUTE_ALL"         = 1
   }
+}
+
+resource "azurerm_app_service_virtual_network_swift_connection" "cosmos_crud_api_vnet_int" {
+  app_service_id = azurerm_linux_function_app.cosmos_crud_api.id
+  subnet_id      = azurerm_subnet.cosmos_crud_api_subnet.id
 }
 
 resource "azurerm_private_endpoint" "cosmos_crud_api_pve" {
@@ -228,7 +341,7 @@ resource "azurerm_private_endpoint" "cosmos_crud_api_pve" {
 
   private_dns_zone_group {
     name                 = "privatednszonegroupfunction"
-    private_dns_zone_ids = [azurerm_private_dns_zone.shared_services_private_zone.id]
+    private_dns_zone_ids = [azurerm_private_dns_zone.function_apis_private_zone.id]
   }
 
   private_service_connection {
@@ -275,6 +388,9 @@ resource "azurerm_subnet" "cocuisson_subnet" {
     }
   }
 
+  service_endpoints = ["Microsoft.Storage"]
+
+
 }
 
 resource "azurerm_subnet" "management_subnet" {
@@ -305,7 +421,7 @@ resource "azurerm_virtual_network_peering" "external_api_peer" {
 resource "azurerm_private_dns_zone_virtual_network_link" "external_api_link" {
   name                  = "external-api-link"
   resource_group_name   = var.resourcegroup_name
-  private_dns_zone_name = azurerm_private_dns_zone.shared_services_private_zone.name
+  private_dns_zone_name = azurerm_private_dns_zone.function_apis_private_zone.name
   virtual_network_id    = azurerm_virtual_network.external_api_vnet.id
   registration_enabled  = true
 
@@ -416,7 +532,7 @@ resource "azurerm_subnet_network_security_group_association" "apim_nsg_associati
 }
 
 resource "azurerm_api_management" "cocuisson_apim" {
-  name = "cocuisson-apim"
+  name = "cocuisson-apim-dev"
   depends_on = [
     azurerm_subnet_network_security_group_association.apim_nsg_association
   ]
